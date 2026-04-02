@@ -1,4 +1,5 @@
 import { WebSocketServer } from 'ws';
+import type { WebSocket } from 'ws';
 import type { WSMessage } from './types.js';
 import { handleReg } from './handlers/authHandler.js';
 import {
@@ -14,13 +15,38 @@ import { finishQuestion } from './handlers/gameHandler.js';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
+interface HeartbeatWebSocket extends WebSocket {
+  isAlive: boolean;
+}
+
 // WebSocket server
 const wss = new WebSocketServer({ port: PORT });
 
 console.log(`WebSocket server started on ws://localhost:${PORT}`);
 
-wss.on('connection', (ws) => {
+// Heartbeat: terminate connections that stopped responding
+const heartbeatInterval = setInterval(() => {
+  wss.clients.forEach((client) => {
+    const ws = client as HeartbeatWebSocket;
+
+    if (!ws.isAlive) return ws.terminate();
+
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30_000);
+
+wss.on('close', () => clearInterval(heartbeatInterval));
+
+wss.on('connection', (client) => {
+  const ws = client as HeartbeatWebSocket;
+
   console.log('Client connected');
+
+  ws.isAlive = true;
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
 
   ws.on('message', (raw) => {
     try {
