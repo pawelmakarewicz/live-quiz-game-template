@@ -65,3 +65,61 @@ export interface AnswerData {
   questionIndex: number;
   answerIndex: number;
 }
+
+// ── Server → Client message map ─────────────────────────────
+
+export interface ServerMessageMap {
+  reg: {
+    name: string;
+    index: string;
+    error: boolean;
+    errorText: string;
+  };
+  error: {
+    message: string;
+  };
+  game_created: {
+    gameId: string;
+    code: string;
+  };
+  game_joined: {
+    gameId: string;
+  };
+  player_joined: {
+    playerName: string;
+    playerCount: number;
+  };
+  update_players: Array<{
+    name: string;
+    index: string;
+    score: number;
+  }>;
+  question: {
+    questionNumber: number;
+    totalQuestions: number;
+    text: string;
+    options: string[];
+    timeLimitSec: number;
+  };
+  answer_accepted: {
+    questionIndex: number;
+  };
+  question_result: {
+    questionIndex: number;
+    correctIndex: number;
+    playerResults: Array<{
+      name: string;
+      answered: boolean;
+      correct: boolean;
+      pointsEarned: number;
+      totalScore: number;
+    }>;
+  };
+  game_finished: {
+    scoreboard: Array<{
+      name: string;
+      score: number;
+      rank: number;
+    }>;
+  };
+}
