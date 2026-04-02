@@ -15,6 +15,23 @@ import {
   clearQuestionTimer,
 } from '../timer/questionTimer.js';
 
+const OPTIONS_COUNT = 4;
+const MIN_TIME_LIMIT_SEC = 1;
+
+function isValidQuestion(q: Question): boolean {
+  return (
+    typeof q.text === 'string' &&
+    q.text.trim().length > 0 &&
+    Array.isArray(q.options) &&
+    q.options.length === OPTIONS_COUNT &&
+    Number.isInteger(q.correctIndex) &&
+    q.correctIndex >= 0 &&
+    q.correctIndex < OPTIONS_COUNT &&
+    Number.isInteger(q.timeLimitSec) &&
+    q.timeLimitSec >= MIN_TIME_LIMIT_SEC
+  );
+}
+
 // ── Create Game ──────────────────────────────────────────────
 
 export function handleCreateGame(ws: WebSocket, data: CreateGameData): void {
@@ -33,15 +50,7 @@ export function handleCreateGame(ws: WebSocket, data: CreateGameData): void {
   }
 
   for (const q of questions) {
-    if (
-      !q.text ||
-      !Array.isArray(q.options) ||
-      q.options.length !== 4 ||
-      q.correctIndex < 0 ||
-      q.correctIndex > 3 ||
-      !q.timeLimitSec ||
-      q.timeLimitSec <= 0
-    ) {
+    if (!isValidQuestion(q)) {
       sendToClient(ws, 'error', { message: 'Invalid question format' });
       return;
     }
